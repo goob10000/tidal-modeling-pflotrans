@@ -77,7 +77,7 @@ def read_tec_file(filename):
     
     return {'variables': variables, 'dimensions': (I, J, K), 'data': data_dict}
 
-dir = "A17"
+dir = "A21"
 tec_data = [read_tec_file(f"{dir}/{dir}-{x:03}.tec") for x in range(11)]
 vel_tec_data = [read_tec_file(f"{dir}/{dir}-vel-{x:03}.tec") for x in range(11)]
 
