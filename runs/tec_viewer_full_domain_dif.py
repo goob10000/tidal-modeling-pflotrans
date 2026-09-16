@@ -78,12 +78,12 @@ def read_tec_file(filename):
     return {'variables': variables, 'dimensions': (I, J, K), 'data': data_dict}
 
 dir1 = "A18"
-tec_data1 = [read_tec_file(f"{dir1}/{dir1}-{x:03}.tec") for x in range(11)]
-vel_tec_data1 = [read_tec_file(f"{dir1}/{dir1}-vel-{x:03}.tec") for x in range(11)]
+tec_data1 = [read_tec_file(f"{dir1[0]}/{dir1}/{dir1}-{x:03}.tec") for x in range(11)]
+vel_tec_data1 = [read_tec_file(f"{dir1[0]}/{dir1}/{dir1}-vel-{x:03}.tec") for x in range(11)]
 
 dir2 = "A20"
-tec_data2 = [read_tec_file(f"{dir2}/{dir2}-{x:03}.tec") for x in range(11)]
-vel_tec_data2 = [read_tec_file(f"{dir2}/{dir2}-vel-{x:03}.tec") for x in range(11)]
+tec_data2 = [read_tec_file(f"{dir2[0]}/{dir2}/{dir2}-{x:03}.tec") for x in range(11)]
+vel_tec_data2 = [read_tec_file(f"{dir2[0]}/{dir2}/{dir2}-vel-{x:03}.tec") for x in range(11)]
 
 x1:np.ndarray = tec_data1[0]["data"]["X [m]"]
 z1:np.ndarray = tec_data1[0]["data"]["Z [m]"]
@@ -165,10 +165,13 @@ for data1, data_vel1, data2, data_vel2 in zip([tec_data1[-1]], [vel_tec_data1[-1
     # f = (quiverX >= 5000) & (quiverX <= 15000) & (quiverZ >= -1000)
     fs = (X >= 5000) & (X <= 15000) & (Z >= -1000)
     
-    ax4.quiver(X[fs], Z[fs], xV_new1[fs] - xV_new2[fs], zV_new1[fs] - zV_new2[fs])
+    q = ax4.quiver(X[fs], Z[fs], xV_new1[fs] - xV_new2[fs], zV_new1[fs] - zV_new2[fs])
     ax4.set_xlabel("X-axis [m]")
     ax4.set_ylabel("Z-axis [m]")
     ax4.set_title("Velocity Field [m/yr]")
+    ax4.quiverkey(q, X=0.85, Y=1.05, U=100, 
+                  label='100 m/yr', labelpos='E', 
+                  fontproperties={'weight': 'bold'})
     # ax4.set_ylim(0, zDim)  # Set y-limits to match the data shape
     # ax4.set_yticks(np.linspace(0, zDim, num=5))  # Set y-ticks to match the data shape
     # ax4.set_yticklabels(np.linspace(z.min(), z.max(), num=5).astype(int))  # Set y-tick labels to match the data range

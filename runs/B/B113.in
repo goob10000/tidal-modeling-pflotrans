@@ -1,12 +1,19 @@
 #==============================================================================
-# PFLOTRAN Input Deck
-# Description: Stepped Hydrothermal Ridge System with Variable Depth Grid
+# PFLOTRAN Input Deck - Davidson Seamount
+# Developed by Nathaniel Platt
 #==============================================================================
 
-# No heating, only pressure but increasing flow rate
+# DESCRIPTION
+# Continuation of B112 with hyrostatic boundary of the same magnitude on the left and right
+# 2 million years of observation
 
+## CHECKLIST
+# [X] change restart
+# [X] change permeability
+
+# STATUS
 # Completed
-# Run
+# Run Incorrectly
 
 SIMULATION
   SIMULATION_TYPE SUBSURFACE
@@ -15,9 +22,23 @@ SIMULATION
       MODE TH
     /
   /
+  CHECKPOINT
+    PERIODIC TIME 10000. y
+    FORMAT HDF5
+  /
+  RESTART
+    FILENAME B112-restart.h5
+  /
 END
 
 SUBSURFACE
+  NUMERICAL_METHODS FLOW
+    TIMESTEPPER
+      PRESSURE_CHANGE_GOVERNOR 1.d5
+      TEMPERATURE_CHANGE_GOVERNOR 0.5d0
+      MAXIMUM_NUMBER_OF_TIMESTEPS 10000000
+    /
+  /
 
 #=========================== discretization ===================================
 # Domain bounds: X in [0, 20000], Y in [0, 1], Z in [-5000, 0]
@@ -30,6 +51,7 @@ GRID
   # ORIGIN sets the minimum bound (-5000 in Z)
   ORIGIN 0.d0 0.d0 -5000.d0
   
+  ## Grid layout. Defined left to right for x and bottom to top for z
   DXYZ
     # DX:
     21*100.d0 \
@@ -55,64 +77,8 @@ GRID
 END
 
 #=========================== material properties ==============================
-MATERIAL_PROPERTY crust1
+MATERIAL_PROPERTY heated_layer
   ID 1
-  POROSITY 0.10d0
-  TORTUOSITY 1.d0
-  ROCK_DENSITY 2700.d0 kg/m^3 
-  SPECIFIC_HEAT 1000.d0 J/kg-C 
-  THERMAL_CONDUCTIVITY_DRY 2.0d0 W/m-C
-  THERMAL_CONDUCTIVITY_WET 2.0d0 W/m-C 
-  PERMEABILITY
-    PERM_ISO 1.d-14 
-  /
-  CHARACTERISTIC_CURVES cc1
-/
-
-MATERIAL_PROPERTY deep_crust1
-  ID 2
-  POROSITY 0.005d0
-  TORTUOSITY 1.d0
-  ROCK_DENSITY 2700.d0 kg/m^3 
-  SPECIFIC_HEAT 1000.d0 J/kg-C 
-  THERMAL_CONDUCTIVITY_DRY 2.0d0 W/m-C
-  THERMAL_CONDUCTIVITY_WET 2.0d0 W/m-C 
-  PERMEABILITY
-    PERM_ISO 1.d-14
-  /
-  CHARACTERISTIC_CURVES cc1
-/
-
-MATERIAL_PROPERTY deep_crust2
-  ID 3
-  POROSITY 0.005d0
-  TORTUOSITY 1.d0
-  ROCK_DENSITY 2700.d0 kg/m^3 
-  SPECIFIC_HEAT 1000.d0 J/kg-C 
-  THERMAL_CONDUCTIVITY_DRY 2.0d0 W/m-C
-  THERMAL_CONDUCTIVITY_WET 2.0d0 W/m-C 
-  PERMEABILITY
-    PERM_ISO 1.d-15
-  /
-  CHARACTERISTIC_CURVES cc1
-/
-
-MATERIAL_PROPERTY deep_crust3
-  ID 4
-  POROSITY 0.005d0
-  TORTUOSITY 1.d0
-  ROCK_DENSITY 2700.d0 kg/m^3 
-  SPECIFIC_HEAT 1000.d0 J/kg-C 
-  THERMAL_CONDUCTIVITY_DRY 2.0d0 W/m-C
-  THERMAL_CONDUCTIVITY_WET 2.0d0 W/m-C 
-  PERMEABILITY
-    PERM_ISO 1.d-16
-  /
-  CHARACTERISTIC_CURVES cc1
-/
-
-MATERIAL_PROPERTY deep_crust4
-  ID 5
   POROSITY 0.005d0
   TORTUOSITY 1.d0
   ROCK_DENSITY 2700.d0 kg/m^3 
@@ -125,36 +91,22 @@ MATERIAL_PROPERTY deep_crust4
   CHARACTERISTIC_CURVES cc1
 /
 
-MATERIAL_PROPERTY deep_crust5
-  ID 6
-  POROSITY 0.005d0
-  TORTUOSITY 1.d0
-  ROCK_DENSITY 2700.d0 kg/m^3 
-  SPECIFIC_HEAT 1000.d0 J/kg-C 
-  THERMAL_CONDUCTIVITY_DRY 2.0d0 W/m-C
-  THERMAL_CONDUCTIVITY_WET 2.0d0 W/m-C 
-  PERMEABILITY
-    PERM_ISO 1.d-18
-  /
-  CHARACTERISTIC_CURVES cc1
-/
-
 MATERIAL_PROPERTY seamount_cap
-  ID 7
+  ID 2
   POROSITY 0.1d0
   TORTUOSITY 1.d0
   ROCK_DENSITY 2700.d0 kg/m^3 
   SPECIFIC_HEAT 1000.d0 J/kg-C 
-  THERMAL_CONDUCTIVITY_DRY 2.0d-1 W/m-C
-  THERMAL_CONDUCTIVITY_WET 2.0d-1 W/m-C 
+  THERMAL_CONDUCTIVITY_DRY 0.2d0 W/m-C
+  THERMAL_CONDUCTIVITY_WET 0.2d0 W/m-C 
   PERMEABILITY
-    PERM_ISO 1.d-14
+    PERM_ISO 1.d-13
   /
   CHARACTERISTIC_CURVES cc1
 /
 
-MATERIAL_PROPERTY crust2
-  ID 8
+MATERIAL_PROPERTY aquifer
+  ID 3
   POROSITY 0.10d0
   TORTUOSITY 1.d0
   ROCK_DENSITY 2700.d0 kg/m^3 
@@ -163,34 +115,6 @@ MATERIAL_PROPERTY crust2
   THERMAL_CONDUCTIVITY_WET 2.0d0 W/m-C 
   PERMEABILITY
     PERM_ISO 1.d-13
-  /
-  CHARACTERISTIC_CURVES cc1
-/
-
-MATERIAL_PROPERTY crust3
-  ID 9
-  POROSITY 0.10d0
-  TORTUOSITY 1.d0
-  ROCK_DENSITY 2700.d0 kg/m^3 
-  SPECIFIC_HEAT 1000.d0 J/kg-C 
-  THERMAL_CONDUCTIVITY_DRY 2.0d0 W/m-C
-  THERMAL_CONDUCTIVITY_WET 2.0d0 W/m-C 
-  PERMEABILITY
-    PERM_ISO 1.d-12
-  /
-  CHARACTERISTIC_CURVES cc1
-/
-
-MATERIAL_PROPERTY crust4
-  ID 10
-  POROSITY 0.10d0
-  TORTUOSITY 1.d0
-  ROCK_DENSITY 2700.d0 kg/m^3 
-  SPECIFIC_HEAT 1000.d0 J/kg-C 
-  THERMAL_CONDUCTIVITY_DRY 2.0d0 W/m-C
-  THERMAL_CONDUCTIVITY_WET 2.0d0 W/m-C 
-  PERMEABILITY
-    PERM_ISO 1.d-11
   /
   CHARACTERISTIC_CURVES cc1
 /
@@ -211,21 +135,30 @@ END
 
 #=========================== output options ===================================
 OUTPUT
-  TIMES yr 5.d5 10.d5 15.d5 20.d5 25.d5 30.d5 35.d5 40.d5 45.d5 50.d5 55.d5 60.d5
+  PERIODIC TIME 10000. yr
   FORMAT TECPLOT BLOCK
   VELOCITY_AT_CENTER
   VARIABLES
     LIQUID_PRESSURE
     TEMPERATURE
     LIQUID_DENSITY
+    LIQUID_SATURATION
+  /
+  OBSERVATION_FILE
+    PERIODIC TIME 1000. yr
+    VARIABLES
+      LIQUID_PRESSURE
+      TEMPERATURE
+      LIQUID_DENSITY
+    /
   /
 END
 
 #=========================== times ============================================
 TIME
-  FINAL_TIME 60.d5 yr
-  INITIAL_TIMESTEP_SIZE 1.d2 yr # Reduced slightly to handle the initial transient of a deeper model
-  MAXIMUM_TIMESTEP_SIZE 1.d5 yr
+  FINAL_TIME 4.d6 yr
+  INITIAL_TIMESTEP_SIZE 3.d0 yr
+  MAXIMUM_TIMESTEP_SIZE 3.d2 yr
 END
 
 #=========================== regions ==========================================
@@ -236,69 +169,218 @@ REGION all
   /
 END
 
-# 1. Total Deep Region (-5000 to -1000 m, X: 0 to 20000)
-REGION deep_layer
+REGION top_heated_layer
   COORDINATES
-    0.d0     0.d0   -5000.d0
-    20000.d0 1.d0   -1000.d0
+    5000.d0     0.d0   -1050.d0
+    15000.d0 1.d0   -1000.d0
   /
 END
 
-# 2. Upper Layer / Aquifer (-1000 to -50 m, Centered X: 5000 to 15000)
-REGION upper_layer
+REGION bottom_heated_layer
+  COORDINATES
+    0.d0     0.d0   -5000.d0
+    20000.d0 1.d0   -1050.d0
+  /
+END
+
+REGION top_aquifer
   COORDINATES
     5000.d0  0.d0   -1000.d0
+    15000.d0 1.d0    -350.d0
+  /
+END
+
+REGION bottom_aquifer
+  COORDINATES
+    5000.d0  0.d0   -350.d0
     15000.d0 1.d0    -50.d0
   /
 END
 
-# 3. Cap Layer (-50 to 0 m, Centered X: 5000 to 15000)
-REGION cap_layer
+REGION top_insulating_cap
   COORDINATES
     5000.d0  0.d0    -50.d0
     15000.d0 1.d0      0.d0
   /
 END
 
-REGION top
-  COORDINATES
-    5000.d0 0.d0 -1000.d0
-    15000.d0 1.d0 0.d0
-  /
-END
-
-REGION upper_left
+REGION upper_left_inactive
   COORDINATES
     0.d0 0.d0 -1000.d0
     5000.d0 1.d0 0.d0
   /
 END
 
-REGION upper_right
+REGION upper_right_inactive
   COORDINATES
     15000.d0 0.d0 -1000.d0
     20000.d0 1.d0 0.d0
   /
 END
 
-REGION right_cap_region
+REGION right_insulating_cap
   COORDINATES
     15000.d0 0.d0 -1050.d0
     20000.d0 1.d0 -1000.d0
   /
-  FACE TOP
 END
 
-REGION left_cap_region
+REGION left_insulating_cap
   COORDINATES
     0.d0 0.d0 -1050.d0
     5000.d0 1.d0 -1000.d0
   /
-  FACE TOP
 END
 
+
+#=========================== logging points ==========================================
+
+REGION location_1
+  COORDINATE 5200.0 1.0 -950.0
+/
+
+REGION location_2
+  COORDINATE 6400.0 1.0 -950.0
+/
+
+REGION location_3
+  COORDINATE 7600.0 1.0 -950.0
+/
+
+REGION location_4
+  COORDINATE 8800.0 1.0 -950.0
+/
+
+REGION location_5
+  COORDINATE 10000.0 1.0 -950.0
+/
+
+REGION location_6
+  COORDINATE 11200.0 1.0 -950.0
+/
+
+REGION location_7
+  COORDINATE 12400.0 1.0 -950.0
+/
+
+REGION location_8
+  COORDINATE 13600.0 1.0 -950.0
+/
+
+REGION location_9
+  COORDINATE 14800.0 1.0 -950.0
+/
+
+REGION location_10
+  COORDINATE 5200.0 1.0 -500.0
+/
+
+REGION location_11
+  COORDINATE 6400.0 1.0 -500.0
+/
+
+REGION location_12
+  COORDINATE 7600.0 1.0 -500.0
+/
+
+REGION location_13
+  COORDINATE 8800.0 1.0 -500.0
+/
+
+REGION location_14
+  COORDINATE 10000.0 1.0 -500.0
+/
+
+REGION location_15
+  COORDINATE 11200.0 1.0 -500.0
+/
+
+REGION location_16
+  COORDINATE 12400.0 1.0 -500.0
+/
+
+REGION location_17
+  COORDINATE 13600.0 1.0 -500.0
+/
+
+REGION location_18
+  COORDINATE 14800.0 1.0 -500.0
+/
+
+OBSERVATION
+  REGION location_1
+/
+
+OBSERVATION
+  REGION location_2
+/
+
+OBSERVATION
+  REGION location_3
+/
+
+OBSERVATION
+  REGION location_4
+/
+
+OBSERVATION
+  REGION location_5
+/
+
+OBSERVATION
+  REGION location_6
+/
+
+OBSERVATION
+  REGION location_7
+/
+
+OBSERVATION
+  REGION location_8
+/
+
+OBSERVATION
+  REGION location_9
+/
+
+OBSERVATION
+  REGION location_10
+/
+
+OBSERVATION
+  REGION location_11
+/
+
+OBSERVATION
+  REGION location_12
+/
+
+OBSERVATION
+  REGION location_13
+/
+
+OBSERVATION
+  REGION location_14
+/
+
+OBSERVATION
+  REGION location_15
+/
+
+OBSERVATION
+  REGION location_16
+/
+
+OBSERVATION
+  REGION location_17
+/
+
+OBSERVATION
+  REGION location_18
+/
+
 #=========================== Boundaries ==========================================
-REGION top_ocean_floor
+REGION top_cap
   COORDINATES
     5000.d0  0.d0   0.d0
     15000.d0 1.d0   0.d0
@@ -306,7 +388,7 @@ REGION top_ocean_floor
   FACE TOP
 END
 
-REGION bottom_heat_source
+REGION bottom_boundary
   COORDINATES
     0.d0     0.d0   -5000.d0
     20000.d0 1.d0   -5000.d0
@@ -314,7 +396,7 @@ REGION bottom_heat_source
   FACE BOTTOM
 END
 
-REGION top_left_hydrostat
+REGION left_hydrostat
   COORDINATES
     5000.d0 0.d0 -1000.d0
     5000.d0 1.d0 0.d0
@@ -322,7 +404,7 @@ REGION top_left_hydrostat
   FACE WEST
 END
 
-REGION top_right_hydrostat
+REGION right_hydrostat
   COORDINATES
     15000.d0 0.d0 -1000.d0
     15000.d0 1.d0 0.d0
@@ -363,7 +445,7 @@ REGION left_cap
 END
 
 #=========================== flow conditions ==================================
-FLOW_CONDITION seafloor_bc
+FLOW_CONDITION no_fluid_2C
   TYPE
     LIQUID_FLUX NEUMANN
     TEMPERATURE DIRICHLET
@@ -392,7 +474,7 @@ FLOW_CONDITION initial_crust
   TEMPERATURE 2.d0 C
 END
 
-FLOW_CONDITION right_hydrostatic_bc
+FLOW_CONDITION hydrostatic_bc
   TYPE
     LIQUID_PRESSURE HYDROSTATIC
     TEMPERATURE DIRICHLET
@@ -402,7 +484,7 @@ FLOW_CONDITION right_hydrostatic_bc
   TEMPERATURE 2.d0 C
 END
 
-FLOW_CONDITION left_hydrostatic_bc
+FLOW_CONDITION hydrostaticNpush_bc
   TYPE
     LIQUID_PRESSURE HYDROSTATIC
     TEMPERATURE DIRICHLET
@@ -418,119 +500,81 @@ INITIAL_CONDITION
   REGION all
 END
 
-BOUNDARY_CONDITION seafloor
-  FLOW_CONDITION seafloor_bc
-  REGION top_ocean_floor
+BOUNDARY_CONDITION top_cap_bc
+  FLOW_CONDITION no_fluid_2C
+  REGION top_cap
 END
 
-BOUNDARY_CONDITION top_right_edge_bc
-  FLOW_CONDITION right_hydrostatic_bc
-  REGION top_right_hydrostat
+BOUNDARY_CONDITION bottom_boundary_bc
+  FLOW_CONDITION bottom_heating
+  REGION bottom_boundary
 END
 
-BOUNDARY_CONDITION top_left_edge_bc
-  FLOW_CONDITION left_hydrostatic_bc
-  REGION top_left_hydrostat
+BOUNDARY_CONDITION right_hydrostat_bc
+  FLOW_CONDITION hydrostatic_bc
+  REGION right_hydrostat
 END
+
+BOUNDARY_CONDITION left_hydrostat_bc
+  FLOW_CONDITION hydrostatic_bc
+  REGION left_hydrostat
+END
+
 
 BOUNDARY_CONDITION right_cap_2deg
-  FLOW_CONDITION seafloor_bc
+  FLOW_CONDITION no_fluid_2C
   REGION left_cap
 END
 
 BOUNDARY_CONDITION left_cap_2deg
-  FLOW_CONDITION seafloor_bc
+  FLOW_CONDITION no_fluid_2C
   REGION right_cap
 END
 
 #=========================== stratigraphy couplers ============================
-
 STRATA
-  REGION cap_layer
+  REGION top_insulating_cap
   MATERIAL seamount_cap
 END
 
 STRATA
-  REGION right_cap_region
+  REGION right_insulating_cap
   MATERIAL seamount_cap
 END
 
 STRATA
-  REGION left_cap_region
+  REGION left_insulating_cap
   MATERIAL seamount_cap
 END
 
 STRATA
-  REGION upper_layer
-  MATERIAL crust1
-  START_TIME 0.d0 y
-  FINAL_TIME 3.d6 y
+  REGION top_aquifer
+  MATERIAL aquifer
 END
 
 STRATA
-  REGION upper_layer
-  MATERIAL crust2
-  START_TIME 3.d6 y
-  FINAL_TIME 4.d6 y
+  REGION bottom_aquifer
+  MATERIAL aquifer
 END
 
 STRATA
-  REGION upper_layer
-  MATERIAL crust3
-  START_TIME 4.d6 y
-  FINAL_TIME 5.d6 y
-END
-
-STRATA
-  REGION upper_layer
-  MATERIAL crust4
-  START_TIME 5.d6 y
-  FINAL_TIME 6.d6 y
-END
-
-STRATA
-  REGION upper_left
+  REGION upper_left_inactive
   INACTIVE
 END
 
 STRATA
-  REGION upper_right
+  REGION upper_right_inactive
   INACTIVE
 END
 
 STRATA
-  REGION deep_layer
-  MATERIAL deep_crust1
-  START_TIME 0.d0 y
-  FINAL_TIME 1.d6 y
+  REGION top_heated_layer
+  MATERIAL heated_layer
 END
 
 STRATA
-  REGION deep_layer
-  MATERIAL deep_crust2
-  START_TIME 1.d6 y
-  FINAL_TIME 2.d6 y
-END
-
-STRATA
-  REGION deep_layer
-  MATERIAL deep_crust3
-  START_TIME 2.d6 y
-  FINAL_TIME 3.d6 y
-END
-
-STRATA
-  REGION deep_layer
-  MATERIAL deep_crust4
-  START_TIME 3.d6 y
-  FINAL_TIME 4.d6 y
-END
-
-STRATA
-  REGION deep_layer
-  MATERIAL deep_crust5
-  START_TIME 4.d6 y
-  FINAL_TIME 6.d6 y
+  REGION bottom_heated_layer
+  MATERIAL heated_layer
 END
 
 #==============================================================================

@@ -1,0 +1,150 @@
+#==============================================================================
+# PFLOTRAN Input Deck
+# Description: 2D Hydrothermal Ridge and Flank System with Bottom Heat Input
+# Mode: TH (Thermal-Hydrology)
+#==============================================================================
+
+SIMULATION
+  SIMULATION_TYPE SUBSURFACE
+  PROCESS_MODELS
+    SUBSURFACE_FLOW flow
+      MODE TH
+    /
+  /
+END
+
+SUBSURFACE
+
+#=========================== discretization ===================================
+GRID
+  TYPE STRUCTURED
+  NXYZ 100 1 50          # 2D domain: 100 cells horizontally, 50 cells vertically
+  BOUNDS
+    0.d0   0.d0   -2000.d0  # Bottom-left-front corner (depth down to -2000m)
+    5000.d0 1.d0     0.d0   # Top-right-back corner (5km wide)
+  /
+END
+
+#=========================== material properties ==============================
+MATERIAL_PROPERTY crust
+  ID 1
+  POROSITY 0.10d0
+  TORTUOSITY 1.d0
+  ROCK_DENSITY 2700.d0           # kg/m^3
+  SPECIFIC_HEAT 1000.d0          # J/kg-K
+  THERMAL_CONDUCTIVITY_DRY 2.0d0 # W/m-K
+  THERMAL_CONDUCTIVITY_WET 2.5d0 # W/m-K
+  
+  # CORRECTED PERMEABILITY SYNTAX
+  PERMEABILITY
+    PERM_ISO 1.d-14              # Standard PFLOTRAN flag for isotropic permeability
+  /
+  CHARACTERISTIC_CURVES cc1
+/
+
+#=========================== characteristic curves ============================
+CHARACTERISTIC_CURVES cc1
+  SATURATION_FUNCTION VAN_GENUCHTEN
+    M 0.5d0
+    ALPHA 1.d-4
+    LIQUID_RESIDUAL_SATURATION 0.1d0
+  /
+  PERMEABILITY_FUNCTION MUALEM_VG_LIQ
+    M 0.5d0
+    LIQUID_RESIDUAL_SATURATION 0.1d0
+  /
+END
+
+#=========================== output options ===================================
+OUTPUT
+  TIMES yr 1. 5. 10. 50. 100.
+  FORMAT TECPLOT BLOCK
+  VELOCITY_AT_CENTER
+  VARIABLES
+    LIQUID_PRESSURE
+    TEMPERATURE
+    LIQUID_DENSITY
+  /
+END
+
+#=========================== times ============================================
+TIME
+  FINAL_TIME 100.d0 yr
+  INITIAL_TIMESTEP_SIZE 1.d-6 d
+  MAXIMUM_TIMESTEP_SIZE 5.d0 yr
+END
+
+#=========================== regions ==========================================
+REGION all
+  COORDINATES
+    0.d0   0.d0   -2000.d0
+    5000.d0 1.d0     0.d0
+  /
+END
+
+REGION top_ocean_floor
+  COORDINATES
+    0.d0   0.d0   0.d0
+    5000.d0 1.d0   0.d0
+  /
+  FACE TOP
+END
+
+REGION bottom_heat_source
+  COORDINATES
+    0.d0   0.d0   -2000.d0
+    5000.d0 1.d0   -2000.d0
+  /
+  FACE BOTTOM
+END
+
+#=========================== flow conditions ==================================
+# Hydrostatic ocean floor boundary (Cold, high pressure)
+FLOW_CONDITION seafloor_bc
+  TYPE
+    LIQUID_PRESSURE DIRICHLET
+    TEMPERATURE DIRICHLET
+  /
+  LIQUID_PRESSURE 2.d7       # ~20 MPa (~2000m ocean depth equivalent)
+  TEMPERATURE 2.d0           # 2°C standard deep ocean water
+END
+
+# Deep Basal Heat Flux (The Ridge/Flank heat input)
+FLOW_CONDITION bottom_heating
+  TYPE
+    LIQUID_FLUX NEUMANN      # No fluid flow crossing the bottom crust boundary
+    ENERGY_FLUX NEUMANN      # Constant heat flux input
+  /
+  LIQUID_FLUX 0.d0           # Impermeable base
+  ENERGY_FLUX 0.25d0         # 250 W/m^2 (High flank/ridge heat flux setup)
+END
+
+FLOW_CONDITION initial_crust
+  TYPE
+    LIQUID_PRESSURE HYDROSTATIC
+    TEMPERATURE DIRICHLET
+  /
+  # Hydrostatic gradient helper setup
+  INTERPOLATION LINEAR
+  DATUM 0.d0 0.d0 0.d0
+  LIQUID_PRESSURE 2.d7
+  TEMPERATURE 2.d0
+END
+
+#=========================== condition couplers ===============================
+INITIAL_CONDITION
+  FLOW_CONDITION initial_crust
+  REGION all
+END
+
+BOUNDARY_CONDITION seafloor
+  FLOW_CONDITION seafloor_bc
+  REGION top_ocean_floor
+END
+
+BOUNDARY_CONDITION basal_heat
+  FLOW_CONDITION bottom_heating
+  REGION bottom_heat_source
+END
+
+#==============================================================================

@@ -145,8 +145,8 @@ MATERIAL_PROPERTY seamount_cap
   TORTUOSITY 1.d0
   ROCK_DENSITY 2700.d0 kg/m^3 
   SPECIFIC_HEAT 1000.d0 J/kg-C 
-  THERMAL_CONDUCTIVITY_DRY 2.0d-1 W/m-C
-  THERMAL_CONDUCTIVITY_WET 2.0d-1 W/m-C 
+  THERMAL_CONDUCTIVITY_DRY 0.2d0 W/m-C
+  THERMAL_CONDUCTIVITY_WET 0.2d0 W/m-C 
   PERMEABILITY
     PERM_ISO 1.d-14
   /
@@ -194,11 +194,17 @@ REGION all
   /
 END
 
-# 1. Total Deep Region (-5000 to -1000 m, X: 0 to 20000)
-REGION deep_layer
+REGION top_deep_layer
+  COORDINATES
+    5000.d0     0.d0   -1050.d0
+    15000.d0 1.d0   -1000.d0
+  /
+END
+
+REGION bottom_deep_layer
   COORDINATES
     0.d0     0.d0   -5000.d0
-    20000.d0 1.d0   -1000.d0
+    20000.d0 1.d0   -1050.d0
   /
 END
 
@@ -244,7 +250,6 @@ REGION right_cap_region
     15000.d0 0.d0 -1050.d0
     20000.d0 1.d0 -1000.d0
   /
-  FACE TOP
 END
 
 REGION left_cap_region
@@ -252,7 +257,6 @@ REGION left_cap_region
     0.d0 0.d0 -1050.d0
     5000.d0 1.d0 -1000.d0
   /
-  FACE TOP
 END
 
 #=========================== Boundaries ==========================================
@@ -429,35 +433,70 @@ STRATA
 END
 
 STRATA
-  REGION deep_layer
+  REGION top_deep_layer
   MATERIAL deep_crust1
   START_TIME 0.d0 y
   FINAL_TIME 1.d6 y
 END
 
 STRATA
-  REGION deep_layer
+  REGION top_deep_layer
   MATERIAL deep_crust2
   START_TIME 1.d6 y
   FINAL_TIME 2.d6 y
 END
 
 STRATA
-  REGION deep_layer
+  REGION top_deep_layer
   MATERIAL deep_crust3
   START_TIME 2.d6 y
   FINAL_TIME 3.d6 y
 END
 
 STRATA
-  REGION deep_layer
+  REGION top_deep_layer
   MATERIAL deep_crust4
   START_TIME 3.d6 y
   FINAL_TIME 4.d6 y
 END
 
 STRATA
-  REGION deep_layer
+  REGION top_deep_layer
+  MATERIAL deep_crust5
+  START_TIME 4.d6 y
+  FINAL_TIME 5.d6 y
+END
+
+STRATA
+  REGION bottom_deep_layer
+  MATERIAL deep_crust1
+  START_TIME 0.d0 y
+  FINAL_TIME 1.d6 y
+END
+
+STRATA
+  REGION bottom_deep_layer
+  MATERIAL deep_crust2
+  START_TIME 1.d6 y
+  FINAL_TIME 2.d6 y
+END
+
+STRATA
+  REGION bottom_deep_layer
+  MATERIAL deep_crust3
+  START_TIME 2.d6 y
+  FINAL_TIME 3.d6 y
+END
+
+STRATA
+  REGION bottom_deep_layer
+  MATERIAL deep_crust4
+  START_TIME 3.d6 y
+  FINAL_TIME 4.d6 y
+END
+
+STRATA
+  REGION bottom_deep_layer
   MATERIAL deep_crust5
   START_TIME 4.d6 y
   FINAL_TIME 5.d6 y

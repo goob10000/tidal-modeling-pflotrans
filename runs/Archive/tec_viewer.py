@@ -1,7 +1,6 @@
 import numpy as np
 import re
 import matplotlib.pyplot as plt
-from os import listdir
 
 def read_tec_file(filename):
     with open(filename, 'r') as f:
@@ -13,8 +12,6 @@ def read_tec_file(filename):
     cell_centered_vars = []
     
     for line in lines:
-        if 'TITLE' in line:
-            title = re.search(r'TITLE = "(.*)"', line).group(1) #type: ignore
         if 'VARIABLES' in line:
             variables = re.findall(r'"([^"]*)"', line)
         if 'ZONE' in line:
@@ -78,31 +75,22 @@ def read_tec_file(filename):
         data_dict[var_name] = flat_data[idx:idx + size]
         idx += size
     
-    return {'variables': variables, 'dimensions': (I, J, K), 'data': data_dict, 'title': title}
+    return {'variables': variables, 'dimensions': (I, J, K), 'data': data_dict}
 
-def round_to_n(x, n):
-    if x == 0:
-        return 0
-    return round(x, -int(np.floor(np.log10(abs(x)))) + n - 1)
+# Run it
+dir = "A15"
+tec_data = [read_tec_file(f"{dir}/{dir}-{x:03}.tec") for x in range(11)]
+vel_tec_data = [read_tec_file(f"{dir}/{dir}-vel-{x:03}.tec") for x in range(11)]
 
-dir = "B103"
-path = f"{dir[0]}/{dir}"
-tec_files = sorted([x for x in listdir(path) if x.endswith(".tec") and not "vel" in x], key=lambda x: int(re.search(r'.*-(\d\d\d)\.tec', x).group(1))) #type: ignore
-vel_tec_files = sorted([x for x in listdir(path) if "vel" in x], key=lambda x: int(re.search(r'.*-vel-(\d\d\d)\.tec', x).group(1))) #type: ignore
-
-tec_data = [read_tec_file(path + "/" + x) for x in tec_files]
-vel_tec_data = [read_tec_file(path + "/" + x) for x in vel_tec_files]
-
-x:np.ndarray = tec_data[0]["data"]["X [m]"]
-z:np.ndarray = tec_data[0]["data"]["Z [m]"]
+x = tec_data[0]["data"]["X [m]"]
+z = tec_data[0]["data"]["Z [m]"]
 
 xDim, yDim, zDim = tuple([(x-1) for x in tec_data[0]["dimensions"]])
 dims = (zDim, yDim, xDim)
 
-# for data, data_vel in zip([tec_data[-1]], [vel_tec_data[-1]]):
-for data, data_vel in zip(tec_data, vel_tec_data):
+for data, data_vel in zip([tec_data[-1]], [vel_tec_data[-1]]):
+# for data, data_vel in zip(tec_data, vel_tec_data):
     fig = plt.figure()
-    title = data["title"]
     temps = data["data"]["Temperature [C]"].reshape(dims)
     pressures = data["data"]['Liquid Pressure [Pa]'].reshape(dims)
     density = data["data"]["Liquid Density [kg/m^3]"].reshape(dims)
@@ -110,61 +98,66 @@ for data, data_vel in zip(tec_data, vel_tec_data):
     zV = data_vel["data"]["qlz [m/yr]"].reshape((xDim, yDim, zDim))
 
     ax1 = fig.add_subplot(221)
-    fig.colorbar(ax1.pcolormesh(np.unique(x), np.unique(z), temps[:, 0, :], shading='auto', cmap='hot'), ax=ax1, orientation='vertical', label='Temperature [C]')
+    ax1.imshow(temps[:, 0, :], cmap='hot', interpolation='nearest')
     ax1.set_xlabel("X-axis [m]")
     ax1.set_ylabel("Z-axis [m]")
     ax1.set_title("Temperature [C]")
+    ax1.set_ylim(0, zDim)  # Set y-limits to match the data shape
+    ax1.set_yticks(np.linspace(0, zDim, num=5))  # Set y-ticks to match the data shape
+    ax1.set_yticklabels(np.linspace(z.min(), z.max(), num=5).astype(int))  # Set y-tick labels to match the data range
+    ax1.set_xticks(np.linspace(0, xDim, num=5))  # Set x-ticks to match the data shape
+    ax1.set_xticklabels(np.linspace(x.min(), x.max(), num=5).astype(int))  # Set x-tick labels to match the data range
 
     ax2 = fig.add_subplot(222)
-    fig.colorbar(ax2.pcolormesh(np.unique(x), np.unique(z), pressures[:, 0, :], shading='auto', cmap='coolwarm'), ax=ax2, orientation='vertical', label='Liquid Pressure [Pa]')
+    ax2.imshow(pressures[:, 0, :], cmap='coolwarm', interpolation='nearest')
     ax2.set_xlabel("X-axis [m]")
     ax2.set_ylabel("Z-axis [m]")
     ax2.set_title("Liquid Pressure [Pa]")
+    ax2.set_ylim(0, zDim)  # Set y-limits to match the data shape
+    ax2.set_yticks(np.linspace(0, zDim, num=5))  # Set y-ticks to match the data shape
+    ax2.set_yticklabels(np.linspace(z.min(), z.max(), num=5).astype(int))  # Set y-tick labels to match the data range
+    ax2.set_xticks(np.linspace(0, xDim, num=5))  # Set x-ticks to match the data shape
+    ax2.set_xticklabels(np.linspace(x.min(), x.max(), num=5).astype(int))  # Set x-tick labels to match the data range
 
     ax3 = fig.add_subplot(223)
-    fig.colorbar(ax3.pcolormesh(np.unique(x), np.unique(z), density[:, 0, :], shading='auto', cmap='viridis'), ax=ax3, orientation='vertical', label='Liquid Density [kg/m^3]')
+    ax3.imshow(density[:, 0, :], cmap='viridis', interpolation='nearest')
     ax3.set_xlabel("X-axis [m]")
     ax3.set_ylabel("Z-axis [m]")
     ax3.set_title("Liquid Density [kg/m^3]")
+    ax3.set_ylim(0, zDim)  # Set y-limits to match the data shape
+    ax3.set_yticks(np.linspace(0, zDim, num=5))  # Set y-ticks to match the data shape
+    ax3.set_yticklabels(np.linspace(z.min(), z.max(), num=5).astype(int))  # Set y-tick labels to match the data range
+    ax3.set_xticks(np.linspace(0, xDim, num=5))  # Set x-ticks to match the data shape
+    ax3.set_xticklabels(np.linspace(x.min(), x.max(), num=5).astype(int))  # Set x-tick labels to match the data range
 
-    mask = np.random.rand(zDim, xDim) < (0.02*5*2)
-
-    quiverXP = x.reshape(117, 2, 573)
-    quiverX = (quiverXP[1:, 0, 1:] + quiverXP[:-1, 0, :-1])/2
-
-    quiverZP = z.reshape(117, 2, 573)
-    quiverZ = (quiverZP[1:, 0, 1:] + quiverZP[:-1, 0, :-1])/2
-
-    fs = (quiverX >= 5000) & (quiverX <= 15000) & (quiverZ >= -1000)
-
-    frameX = quiverX[fs]
-    frameZ = quiverZ[fs]
-
-    xV = data_vel["data"]["qlx [m/yr]"].reshape((zDim, yDim, xDim))[:, 0, :]
-    zV = data_vel["data"]["qlz [m/yr]"].reshape((zDim, yDim, xDim))[:, 0, :]
-
-    frameXV = xV[fs]
-    frameZV = zV[fs]
-
-    mask = np.random.rand(frameX.shape[0]) < (0.03)
-    
+    # if not(xV.min() == 0 and zV.min() == 0):
+    X, Z = np.meshgrid(np.arange(xV.shape[0]), np.arange(xV.shape[2]))
     ax4 = fig.add_subplot(224)
-
-    def squash(m):
-        return (m[1:, 0, 1:] + m[:-1, 0, :-1])/2
-    
-    s = 31536000
-    
-    q = ax4.quiver(frameX[mask], frameZ[mask], frameXV[mask]/s, frameZV[mask]/s)
-    V = np.sqrt((frameXV[mask]/s)**2 + (frameZV[mask]/s)**2)
+    a = 29
+    b = zDim//a
+    c = 31
+    d = xDim//c
+    X_new = X.reshape(a, b, c, d).mean(axis=3).mean(axis=1)
+    Z_new = Z.reshape(a, b, c, d).mean(axis=3).mean(axis=1)
+    xV_new = (xV[:, 0, :] + 1e-15).reshape(a, b, c, d).mean(axis=3).mean(axis=1)
+    zV_new = (zV[:, 0, :] + 1e-15).reshape(a, b, c, d).mean(axis=3).mean(axis=1)
+    ax4.quiver(X_new, Z_new, xV_new, zV_new)
     ax4.set_xlabel("X-axis [m]")
     ax4.set_ylabel("Z-axis [m]")
-    ax4.set_title("Velocity Field [m/s]")
-    ax4.quiverkey(q, X=0.85, Y=1.05, U=V.max(), 
-        label=f'{round_to_n(V.max(), 5)} m/s', labelpos='E', 
-        fontproperties={'weight': 'bold'})
-    fig.suptitle(f"t = {title}")
+    ax4.set_title("Velocity Field [m/yr]")
+    ax4.set_ylim(0, zDim)  # Set y-limits to match the data shape
+    ax4.set_yticks(np.linspace(0, zDim, num=5))  # Set y-ticks to match the data shape
+    ax4.set_yticklabels(np.linspace(z.min(), z.max(), num=5).astype(int))  # Set y-tick labels to match the data range
+    ax4.set_xticks(np.linspace(0, xDim, num=5))  # Set x-ticks to match the data shape
+    ax4.set_xticklabels(np.linspace(x.min(), x.max(), num=5).astype(int))  # Set x-tick labels to match the data range
+
+    fig.colorbar(ax1.imshow(temps[:, 0, :], cmap='hot', interpolation='nearest'), ax=ax1, orientation='vertical', label='Temperature [C]')
+    fig.colorbar(ax2.imshow(pressures[:, 0, :], cmap='coolwarm', interpolation='nearest'), ax=ax2, orientation='vertical', label='Liquid Pressure [Pa]')
+    fig.colorbar(ax3.imshow(density[:, 0, :], cmap='viridis', interpolation='nearest'), ax=ax3, orientation='vertical', label='Liquid Density [kg/m^3]')
+    # fig.suptitle("Simulation Data Visualization")
     plt.show()
+
+dims
 
 for data, data_vel in zip([tec_data[-1]], [vel_tec_data[-1]]):
 # for data, data_vel in zip(tec_data, vel_tec_data):
@@ -172,49 +165,31 @@ for data, data_vel in zip([tec_data[-1]], [vel_tec_data[-1]]):
     xV = data_vel["data"]["qlx [m/yr]"].reshape((xDim, yDim, zDim))
     zV = data_vel["data"]["qlz [m/yr]"].reshape((xDim, yDim, zDim))
 
-    quiverXP = x.reshape(117, 2, 573)
-    quiverX = (quiverXP[1:, 0, 1:] + quiverXP[:-1, 0, :-1])/2
-
-    quiverZP = z.reshape(117, 2, 573)
-    quiverZ = (quiverZP[1:, 0, 1:] + quiverZP[:-1, 0, :-1])/2
-
+    # if not(xV.min() == 0 and zV.min() == 0):
+    X, Z = np.meshgrid(np.arange(xV.shape[0]), np.arange(xV.shape[2]))
     ax4 = fig.add_subplot(111)
-    
-    a = 29
+    a = 100
     b = zDim//a
-    c = 52
+    c = 25
     d = xDim//c
-
-    def squash(m):
-        return (m[1:, 0, 1:] + m[:-1, 0, :-1])/2
-    
-    
-    quiverXP = x.reshape(117, 2, 573)
-    quiverX = squash(quiverXP)
-    X = quiverX.reshape(a, b, c, d).mean(axis=3).mean(axis=1)
-    xV = data_vel["data"]["qlx [m/yr]"].reshape((zDim, yDim, xDim))[:, 0, :]
-
-    quiverZP = z.reshape(117, 2, 573)
-    quiverZ = squash(quiverZP)
-    Z = quiverZ.reshape(a, b, c, d).mean(axis=3).mean(axis=1)
-    zV = data_vel["data"]["qlz [m/yr]"].reshape((zDim, yDim, xDim))[:, 0, :]
-
-    xV_new = (xV).reshape(a, b, c, d).mean(axis=3).mean(axis=1)
-    zV_new = (zV).reshape(a, b, c, d).mean(axis=3).mean(axis=1)
-
-    f = (quiverX >= 5000) & (quiverX <= 15000) & (quiverZ >= -1000)
-    fs = (X >= 5000) & (X <= 15000) & (Z >= -1000)
-    
-    ax4.quiver(X[fs], Z[fs], xV_new[fs], zV_new[fs])
+    X_new = X.reshape(a, b, c, d).mean(axis=3).mean(axis=1)
+    Z_new = Z.reshape(a, b, c, d).mean(axis=3).mean(axis=1)
+    xV_new = (xV[:, 0, :] + 1e-15).reshape(a, b, c, d).mean(axis=3).mean(axis=1)
+    zV_new = (zV[:, 0, :] + 1e-15).reshape(a, b, c, d).mean(axis=3).mean(axis=1)
+    ax4.quiver(X_new, Z_new, xV_new, zV_new)
     ax4.set_xlabel("X-axis [m]")
     ax4.set_ylabel("Z-axis [m]")
     ax4.set_title("Velocity Field [m/yr]")
-    # ax4.set_ylim(0, zDim)  # Set y-limits to match the data shape
-    # ax4.set_yticks(np.linspace(0, zDim, num=5))  # Set y-ticks to match the data shape
-    # ax4.set_yticklabels(np.linspace(z.min(), z.max(), num=5).astype(int))  # Set y-tick labels to match the data range
-    # ax4.set_xticks(np.linspace(0, xDim, num=5))  # Set x-ticks to match the data shape
-    # ax4.set_xticklabels(np.linspace(x.min(), x.max(), num=5).astype(int))  # Set x-tick labels to match the data range
+    ax4.set_ylim(zDim-zDim/5, zDim)  # Set y-limits to match the data shape
+    ax4.set_yticks(np.linspace(zDim-zDim/5, zDim, num=6))  # Set y-ticks to match the data shape
+    ax4.set_yticklabels(np.linspace(zDim-zDim/5, z.max(), num=6).astype(int))  # Set y-tick labels to match the data range
+    ax4.set_xticks(np.linspace(0, xDim, num=6))  # Set x-ticks to match the data shape
+    ax4.set_xticklabels(np.linspace(x.min(), x.max(), num=6).astype(int))  # Set x-tick labels to match the data range
 
+    # fig.colorbar(ax1.imshow(temps[:, 0, :], cmap='hot', interpolation='nearest'), ax=ax1, orientation='vertical', label='Temperature [C]')
+    # fig.colorbar(ax2.imshow(pressures[:, 0, :], cmap='coolwarm', interpolation='nearest'), ax=ax2, orientation='vertical', label='Liquid Pressure [Pa]')
+    # fig.colorbar(ax3.imshow(density[:, 0, :], cmap='viridis', interpolation='nearest'), ax=ax3, orientation='vertical', label='Liquid Density [kg/m^3]')
+    # fig.suptitle("Simulation Data Visualization")
     plt.show()
 
 
@@ -224,48 +199,24 @@ for data, data_vel in zip([tec_data[-1]], [vel_tec_data[-1]]):
     temps = data["data"]["Temperature [C]"].reshape(dims)
 
     ax1 = fig.add_subplot(111)
-    ax1.pcolormesh(np.unique(x), np.unique(z), temps[:, 0, :], shading='auto', cmap='viridis')
+    ax1.pcolormesh(x, z, temps[:, 0, :], shading='auto', cmap='viridis')
+    ax1.imshow(temps[:, 0, :], cmap='hot', interpolation='nearest')
     ax1.set_xlabel("X-axis [m]")
     ax1.set_ylabel("Z-axis [m]")
     ax1.set_title("Temperature [C]")
+    ax1.set_ylim(zDim*9/10, zDim)  # Set y-limits to match the data shape
+    ax1.set_yticks(np.linspace(zDim*9/10, zDim, num=5))  # Set y-ticks to match the data shape
+    ax1.set_yticklabels(np.linspace(z.min()/10, z.max(), num=5).astype(int))  # Set y-tick labels to match the data range
+    ax1.set_xticks(np.linspace(0, xDim, num=5))  # Set x-ticks to match the data shape
+    ax1.set_xticklabels(np.linspace(x.min(), x.max(), num=5).astype(int))  # Set x-tick labels to match the data range
+
     # fig.colorbar(ax1.imshow(temps[:, 0, :], cmap='hot', interpolation='nearest'), ax=ax1, orientation='vertical', label='Temperature [C]')
     plt.show()
 
-x.shape
-
-a = 29
-b = zDim//a
-c = 52
-d = xDim//c
-
-def squash(m):
-    return (m[1:, 0, 1:] + m[:-1, 0, :-1])/2
-
-quiverXP = x.reshape(117, 2, 573)
-quiverX = squash(quiverXP)
-X = quiverX.reshape(a, b, c, d).mean(axis=3).mean(axis=1)
-xV = data_vel["data"]["qlx [m/yr]"].reshape((zDim, yDim, xDim))[:, 0, :]
-
-quiverZP = z.reshape(117, 2, 573)
-quiverZ = squash(quiverZP)
-Z = quiverZ.reshape(a, b, c, d).mean(axis=3).mean(axis=1)
-zV = data_vel["data"]["qlz [m/yr]"].reshape((zDim, yDim, xDim))[:, 0, :]
-
-xV_new = (xV).reshape(a, b, c, d).mean(axis=3).mean(axis=1)
-zV_new = (zV).reshape(a, b, c, d).mean(axis=3).mean(axis=1)
-
-f = (quiverX >= 5000) & (quiverX <= 15000) & (quiverZ >= -1000)
-fs = (X >= 5000) & (X <= 15000) & (Z >= -1000)
-
-plt.quiver(X[fs], Z[fs], xV_new[fs], zV_new[fs])
-plt.quiver(quiverX[f], quiverZ[f], xV[f], zV[f])
-
-# plt.scatter(quiverX, quiverZ, s=0.5)
-# plt.scatter(quiverXP, quiverZP, s=0.5)
-# plt.scatter(x, z, s=0.5)
-plt.show()
-
-
+zDim/5
+z.min(), z.max()/5
+4*zDim/5
+zDim
 # fig = plt.figure()
 # temps = data["data"]["Temperature [C]"].reshape(tuple([(x-1) for x in data["dimensions"]]))
 # pressures = data["data"]['Liquid Pressure [Pa]'].reshape(tuple([(x-1) for x in data["dimensions"]]))

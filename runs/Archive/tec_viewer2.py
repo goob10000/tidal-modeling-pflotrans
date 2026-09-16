@@ -1,7 +1,6 @@
 import numpy as np
 import re
 import matplotlib.pyplot as plt
-from os import listdir
 
 def read_tec_file(filename):
     with open(filename, 'r') as f:
@@ -13,8 +12,6 @@ def read_tec_file(filename):
     cell_centered_vars = []
     
     for line in lines:
-        if 'TITLE' in line:
-            title = re.search(r'TITLE = "(.*)"', line).group(1) #type: ignore
         if 'VARIABLES' in line:
             variables = re.findall(r'"([^"]*)"', line)
         if 'ZONE' in line:
@@ -78,20 +75,12 @@ def read_tec_file(filename):
         data_dict[var_name] = flat_data[idx:idx + size]
         idx += size
     
-    return {'variables': variables, 'dimensions': (I, J, K), 'data': data_dict, 'title': title}
+    return {'variables': variables, 'dimensions': (I, J, K), 'data': data_dict}
 
-def round_to_n(x, n):
-    if x == 0:
-        return 0
-    return round(x, -int(np.floor(np.log10(abs(x)))) + n - 1)
-
-dir = "B103"
-path = f"{dir[0]}/{dir}"
-tec_files = sorted([x for x in listdir(path) if x.endswith(".tec") and not "vel" in x], key=lambda x: int(re.search(r'.*-(\d\d\d)\.tec', x).group(1))) #type: ignore
-vel_tec_files = sorted([x for x in listdir(path) if "vel" in x], key=lambda x: int(re.search(r'.*-vel-(\d\d\d)\.tec', x).group(1))) #type: ignore
-
-tec_data = [read_tec_file(path + "/" + x) for x in tec_files]
-vel_tec_data = [read_tec_file(path + "/" + x) for x in vel_tec_files]
+# Run it
+dir = "A22"
+tec_data = [read_tec_file(f"{dir}/{dir}-{x:03}.tec") for x in range(11)]
+vel_tec_data = [read_tec_file(f"{dir}/{dir}-vel-{x:03}.tec") for x in range(11)]
 
 x:np.ndarray = tec_data[0]["data"]["X [m]"]
 z:np.ndarray = tec_data[0]["data"]["Z [m]"]
@@ -102,7 +91,6 @@ dims = (zDim, yDim, xDim)
 # for data, data_vel in zip([tec_data[-1]], [vel_tec_data[-1]]):
 for data, data_vel in zip(tec_data, vel_tec_data):
     fig = plt.figure()
-    title = data["title"]
     temps = data["data"]["Temperature [C]"].reshape(dims)
     pressures = data["data"]['Liquid Pressure [Pa]'].reshape(dims)
     density = data["data"]["Liquid Density [kg/m^3]"].reshape(dims)
@@ -127,43 +115,37 @@ for data, data_vel in zip(tec_data, vel_tec_data):
     ax3.set_ylabel("Z-axis [m]")
     ax3.set_title("Liquid Density [kg/m^3]")
 
-    mask = np.random.rand(zDim, xDim) < (0.02*5*2)
+    quiverXP = x[:x.shape[0]//2].reshape(117, 373)
+    quiverX = (quiverXP[1:, 1:] + quiverXP[:-1, :-1])/2
 
-    quiverXP = x.reshape(117, 2, 573)
-    quiverX = (quiverXP[1:, 0, 1:] + quiverXP[:-1, 0, :-1])/2
-
-    quiverZP = z.reshape(117, 2, 573)
-    quiverZ = (quiverZP[1:, 0, 1:] + quiverZP[:-1, 0, :-1])/2
-
-    fs = (quiverX >= 5000) & (quiverX <= 15000) & (quiverZ >= -1000)
-
-    frameX = quiverX[fs]
-    frameZ = quiverZ[fs]
-
-    xV = data_vel["data"]["qlx [m/yr]"].reshape((zDim, yDim, xDim))[:, 0, :]
-    zV = data_vel["data"]["qlz [m/yr]"].reshape((zDim, yDim, xDim))[:, 0, :]
-
-    frameXV = xV[fs]
-    frameZV = zV[fs]
-
-    mask = np.random.rand(frameX.shape[0]) < (0.03)
-    
-    ax4 = fig.add_subplot(224)
+    quiverZP = z[:z.shape[0]//2].reshape(117, 373)
+    quiverZ = (quiverZP[1:, 1:] + quiverZP[:-1, :-1])/2
 
     def squash(m):
         return (m[1:, 0, 1:] + m[:-1, 0, :-1])/2
-    
-    s = 31536000
-    
-    q = ax4.quiver(frameX[mask], frameZ[mask], frameXV[mask]/s, frameZV[mask]/s)
-    V = np.sqrt((frameXV[mask]/s)**2 + (frameZV[mask]/s)**2)
+            
+    # # if not(xV.min() == 0 and zV.min() == 0):
+    ax4 = fig.add_subplot(224)
+    a = 29
+    b = zDim//a
+    c = 31
+    d = xDim//c
+    X = quiverX.reshape(a, b, c, d).mean(axis=3).mean(axis=1)
+    Z = quiverZ.reshape(a, b, c, d).mean(axis=3).mean(axis=1)
+    xV_new = (xV[:, 0, :] + 1e-15).reshape(a, b, c, d).mean(axis=3).mean(axis=1)
+    zV_new = (zV[:, 0, :] + 1e-15).reshape(a, b, c, d).mean(axis=3).mean(axis=1)
+    ax4.quiver(X, Z, xV_new, zV_new)
     ax4.set_xlabel("X-axis [m]")
     ax4.set_ylabel("Z-axis [m]")
-    ax4.set_title("Velocity Field [m/s]")
-    ax4.quiverkey(q, X=0.85, Y=1.05, U=V.max(), 
-        label=f'{round_to_n(V.max(), 5)} m/s', labelpos='E', 
-        fontproperties={'weight': 'bold'})
-    fig.suptitle(f"t = {title}")
+    ax4.set_title("Velocity Field [m/yr]")
+    # ax4.set_ylim(0, zDim)  # Set y-limits to match the data shape
+    # ax4.set_yticks(np.linspace(0, zDim, num=5))  # Set y-ticks to match the data shape
+    # ax4.set_yticklabels(np.linspace(z.min(), z.max(), num=5).astype(int))  # Set y-tick labels to match the data range
+    # ax4.set_xticks(np.linspace(0, xDim, num=5))  # Set x-ticks to match the data shape
+    # ax4.set_xticklabels(np.linspace(x.min(), x.max(), num=5).astype(int))  # Set x-tick labels to match the data range
+
+    
+    # fig.suptitle("Simulation Data Visualization")
     plt.show()
 
 for data, data_vel in zip([tec_data[-1]], [vel_tec_data[-1]]):
@@ -172,40 +154,24 @@ for data, data_vel in zip([tec_data[-1]], [vel_tec_data[-1]]):
     xV = data_vel["data"]["qlx [m/yr]"].reshape((xDim, yDim, zDim))
     zV = data_vel["data"]["qlz [m/yr]"].reshape((xDim, yDim, zDim))
 
-    quiverXP = x.reshape(117, 2, 573)
-    quiverX = (quiverXP[1:, 0, 1:] + quiverXP[:-1, 0, :-1])/2
+    quiverXP = x[:43641].reshape(117, 373)
+    quiverX = (quiverXP[1:, 1:] + quiverXP[:-1, :-1])/2
 
-    quiverZP = z.reshape(117, 2, 573)
-    quiverZ = (quiverZP[1:, 0, 1:] + quiverZP[:-1, 0, :-1])/2
+    quiverZP = z[:43641].reshape(117, 373)
+    quiverZ = (quiverZP[1:, 1:] + quiverZP[:-1, :-1])/2
 
     ax4 = fig.add_subplot(111)
-    
     a = 29
     b = zDim//a
-    c = 52
+    c = 31
     d = xDim//c
-
-    def squash(m):
-        return (m[1:, 0, 1:] + m[:-1, 0, :-1])/2
-    
-    
-    quiverXP = x.reshape(117, 2, 573)
-    quiverX = squash(quiverXP)
     X = quiverX.reshape(a, b, c, d).mean(axis=3).mean(axis=1)
-    xV = data_vel["data"]["qlx [m/yr]"].reshape((zDim, yDim, xDim))[:, 0, :]
-
-    quiverZP = z.reshape(117, 2, 573)
-    quiverZ = squash(quiverZP)
     Z = quiverZ.reshape(a, b, c, d).mean(axis=3).mean(axis=1)
-    zV = data_vel["data"]["qlz [m/yr]"].reshape((zDim, yDim, xDim))[:, 0, :]
-
-    xV_new = (xV).reshape(a, b, c, d).mean(axis=3).mean(axis=1)
-    zV_new = (zV).reshape(a, b, c, d).mean(axis=3).mean(axis=1)
-
-    f = (quiverX >= 5000) & (quiverX <= 15000) & (quiverZ >= -1000)
-    fs = (X >= 5000) & (X <= 15000) & (Z >= -1000)
-    
-    ax4.quiver(X[fs], Z[fs], xV_new[fs], zV_new[fs])
+    # xV_new = np.log10((xV[:, 0, :]).reshape(a, b, c, d).mean(axis=3).mean(axis=1)*10e6)
+    # zV_new = np.log10((zV[:, 0, :]).reshape(a, b, c, d).mean(axis=3).mean(axis=1)*10e6)
+    xV_new = (xV[:, 0, :]).reshape(c, d, a, b).mean(axis=3).mean(axis=1)
+    zV_new = (zV[:, 0, :]).reshape(c, d, a, b).mean(axis=3).mean(axis=1)
+    ax4.quiver(X, Z, xV_new, zV_new)
     ax4.set_xlabel("X-axis [m]")
     ax4.set_ylabel("Z-axis [m]")
     ax4.set_title("Velocity Field [m/yr]")
@@ -233,38 +199,15 @@ for data, data_vel in zip([tec_data[-1]], [vel_tec_data[-1]]):
 
 x.shape
 
-a = 29
-b = zDim//a
-c = 52
-d = xDim//c
+quiverXP = x.reshape(373, 2, 117)
+quiverX = (quiverXP[1:, 0, 1:] + quiverXP[:-1, 0, :-1])/2
 
-def squash(m):
-    return (m[1:, 0, 1:] + m[:-1, 0, :-1])/2
-
-quiverXP = x.reshape(117, 2, 573)
-quiverX = squash(quiverXP)
-X = quiverX.reshape(a, b, c, d).mean(axis=3).mean(axis=1)
-xV = data_vel["data"]["qlx [m/yr]"].reshape((zDim, yDim, xDim))[:, 0, :]
-
-quiverZP = z.reshape(117, 2, 573)
-quiverZ = squash(quiverZP)
-Z = quiverZ.reshape(a, b, c, d).mean(axis=3).mean(axis=1)
-zV = data_vel["data"]["qlz [m/yr]"].reshape((zDim, yDim, xDim))[:, 0, :]
-
-xV_new = (xV).reshape(a, b, c, d).mean(axis=3).mean(axis=1)
-zV_new = (zV).reshape(a, b, c, d).mean(axis=3).mean(axis=1)
-
-f = (quiverX >= 5000) & (quiverX <= 15000) & (quiverZ >= -1000)
-fs = (X >= 5000) & (X <= 15000) & (Z >= -1000)
-
-plt.quiver(X[fs], Z[fs], xV_new[fs], zV_new[fs])
-plt.quiver(quiverX[f], quiverZ[f], xV[f], zV[f])
-
-# plt.scatter(quiverX, quiverZ, s=0.5)
-# plt.scatter(quiverXP, quiverZP, s=0.5)
-# plt.scatter(x, z, s=0.5)
+quiverZP = z.reshape(373, 2, 117)
+quiverZ = (quiverZP[1:, 0, 1:] + quiverZP[:-1, 0, :-1])/2
+plt.scatter(quiverX, quiverZ, s=0.5)
+plt.scatter(quiverXP, quiverZP, s=0.5)
+plt.scatter(x, z, s=0.5)
 plt.show()
-
 
 # fig = plt.figure()
 # temps = data["data"]["Temperature [C]"].reshape(tuple([(x-1) for x in data["dimensions"]]))
