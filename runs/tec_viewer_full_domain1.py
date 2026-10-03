@@ -85,7 +85,9 @@ def round_to_n(x, n):
         return 0
     return round(x, -int(np.floor(np.log10(abs(x)))) + n - 1)
 
-dir = "B103"
+dir = "B22"
+permeability = "1e-17"
+aquiferThickness = "Everything 10^-17"
 path = f"{dir[0]}/{dir}"
 tec_files = sorted([x for x in listdir(path) if x.endswith(".tec") and not "vel" in x], key=lambda x: int(re.search(r'.*-(\d\d\d)\.tec', x).group(1))) #type: ignore
 vel_tec_files = sorted([x for x in listdir(path) if "vel" in x], key=lambda x: int(re.search(r'.*-vel-(\d\d\d)\.tec', x).group(1))) #type: ignore
@@ -127,6 +129,27 @@ for data, data_vel in zip(tec_data, vel_tec_data):
     ax3.set_ylabel("Z-axis [m]")
     ax3.set_title("Liquid Density [kg/m^3]")
 
+    topTemps = temps[-1, 0, 86:486]
+    topTemps2 = temps[-2, 0, 86:486]
+
+    leftTopTemps = temps[-41, 0, :86]
+    leftTopTemps2 = temps[-42, 0, :86]
+
+    rightTopTemps = temps[-41, 0, 486:]
+    rightTopTemps2 = temps[-42, 0, 486:]
+
+    leftDeltaT = leftTopTemps - leftTopTemps2
+    rightDeltaT = rightTopTemps - rightTopTemps2
+    topDeltaT = topTemps - topTemps2
+
+    deltaT = -1 * np.concatenate((leftDeltaT, topDeltaT, rightDeltaT))
+
+    heatFlux = deltaT / 25 * 2.0
+    areas = np.array([100] * 21 + [75] * 15 + [50] * 15 + [35] * 15 + [25] * 440 + [35] * 15 + [50] * 15 + [75] * 15 + [100] * 21)
+    heat = np.sum(heatFlux * areas)
+    heat_input = sum(0.11*areas)
+    print(heat_input)
+
     mask = np.random.rand(zDim, xDim) < (0.02*5*2)
 
     quiverXP = x.reshape(117, 2, 573)
@@ -147,23 +170,30 @@ for data, data_vel in zip(tec_data, vel_tec_data):
     frameZV = zV[fs]
 
     mask = np.random.rand(frameX.shape[0]) < (0.03)
+
+    fig2 = plt.figure()
+    ax5 = fig2.add_subplot(111)
+    ax5.plot(quiverX[0], heatFlux)
+    ax5.set_xlabel("X-axis [m]")
+    ax5.set_ylabel("Heat Flux [W/m^2]")
+    ax5.set_title(f"Heat Flux at Surface, t = {title}, Total Heat = {round_to_n(heat, 5)} W")
     
     ax4 = fig.add_subplot(224)
 
     def squash(m):
         return (m[1:, 0, 1:] + m[:-1, 0, :-1])/2
     
-    s = 31536000
+    s = 31536000 # m/s to m/yr
     
     q = ax4.quiver(frameX[mask], frameZ[mask], frameXV[mask]/s, frameZV[mask]/s)
     V = np.sqrt((frameXV[mask]/s)**2 + (frameZV[mask]/s)**2)
     ax4.set_xlabel("X-axis [m]")
     ax4.set_ylabel("Z-axis [m]")
-    ax4.set_title("Velocity Field [m/s]")
+    ax4.set_title("Velocity Field [m/yr]")
     ax4.quiverkey(q, X=0.85, Y=1.05, U=V.max(), 
         label=f'{round_to_n(V.max(), 5)} m/s', labelpos='E', 
         fontproperties={'weight': 'bold'})
-    fig.suptitle(f"t = {title}")
+    fig.suptitle(f"t = {title}; permeability = {permeability}; aquifer thickness = {aquiferThickness}")
     plt.show()
 
 for data, data_vel in zip([tec_data[-1]], [vel_tec_data[-1]]):

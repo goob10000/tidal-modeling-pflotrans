@@ -4,14 +4,13 @@
 #==============================================================================
 
 # DESCRIPTION
-# Continuation of B142 with hyrostatic boundary of the same magnitude on the left and right
+# Continuation of B192 with hyrostatic boundary of the same magnitude on the left and right
 # 2 million years of observation
 
 ## CHECKLIST
 # [X] change restart
-# [X] change permeability
+# [X] change bottom_aquifer permeability
 # [X] change description
-# [X] change max time step
 
 # STATUS
 # Completed
@@ -29,8 +28,7 @@ SIMULATION
     FORMAT HDF5
   /
   RESTART
-    # FILENAME B142-restart.h5
-    FILENAME B143-3070000.0000y.h5
+    FILENAME B192-restart.h5
   /
 END
 
@@ -557,7 +555,7 @@ END
 
 STRATA
   REGION bottom_aquifer
-  MATERIAL aquifer
+  MATERIAL heated_layer
 END
 
 STRATA

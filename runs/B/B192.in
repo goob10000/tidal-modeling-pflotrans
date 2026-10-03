@@ -4,14 +4,12 @@
 #==============================================================================
 
 # DESCRIPTION
-# Continuation of B142 with hyrostatic boundary of the same magnitude on the left and right
-# 2 million years of observation
+# Continuation of B191. 20kPa pressure on left hydrostat. 1 Million years. 10^-10 permeability, 300m aquifer.
 
 ## CHECKLIST
 # [X] change restart
-# [X] change permeability
+# [X] change bottom_aquifer permeability
 # [X] change description
-# [X] change max time step
 
 # STATUS
 # Completed
@@ -29,8 +27,7 @@ SIMULATION
     FORMAT HDF5
   /
   RESTART
-    # FILENAME B142-restart.h5
-    FILENAME B143-3070000.0000y.h5
+    FILENAME B191-restart.h5
   /
 END
 
@@ -159,8 +156,8 @@ END
 
 #=========================== times ============================================
 TIME
-  FINAL_TIME 4.d6 yr
-  INITIAL_TIMESTEP_SIZE 3.d0 yr
+  FINAL_TIME 2.d6 yr
+  INITIAL_TIMESTEP_SIZE 3.d-1 yr
   MAXIMUM_TIMESTEP_SIZE 3.d1 yr
 END
 
@@ -519,10 +516,9 @@ BOUNDARY_CONDITION right_hydrostat_bc
 END
 
 BOUNDARY_CONDITION left_hydrostat_bc
-  FLOW_CONDITION hydrostatic_bc
+  FLOW_CONDITION hydrostaticNpush_bc
   REGION left_hydrostat
 END
-
 
 BOUNDARY_CONDITION right_cap_2deg
   FLOW_CONDITION no_fluid_2C
@@ -557,7 +553,7 @@ END
 
 STRATA
   REGION bottom_aquifer
-  MATERIAL aquifer
+  MATERIAL heated_layer
 END
 
 STRATA

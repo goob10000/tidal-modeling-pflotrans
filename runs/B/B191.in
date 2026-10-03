@@ -4,14 +4,12 @@
 #==============================================================================
 
 # DESCRIPTION
-# Continuation of B142 with hyrostatic boundary of the same magnitude on the left and right
-# 2 million years of observation
+# 1 million settling at 10^-10, 300m aquifer
 
 ## CHECKLIST
 # [X] change restart
-# [X] change permeability
+# [X] change bottom_aquifer permeability
 # [X] change description
-# [X] change max time step
 
 # STATUS
 # Completed
@@ -29,8 +27,8 @@ SIMULATION
     FORMAT HDF5
   /
   RESTART
-    # FILENAME B142-restart.h5
-    FILENAME B143-3070000.0000y.h5
+    FILENAME B03-4100000.0000yr.h5
+    RESET_TO_TIME_ZERO
   /
 END
 
@@ -138,7 +136,7 @@ END
 
 #=========================== output options ===================================
 OUTPUT
-  PERIODIC TIME 10000. yr
+  PERIODIC TIME 100000. yr
   FORMAT TECPLOT BLOCK
   VELOCITY_AT_CENTER
   VARIABLES
@@ -159,7 +157,7 @@ END
 
 #=========================== times ============================================
 TIME
-  FINAL_TIME 4.d6 yr
+  FINAL_TIME 1.d6 yr
   INITIAL_TIMESTEP_SIZE 3.d0 yr
   MAXIMUM_TIMESTEP_SIZE 3.d1 yr
 END
@@ -557,7 +555,7 @@ END
 
 STRATA
   REGION bottom_aquifer
-  MATERIAL aquifer
+  MATERIAL heated_layer
 END
 
 STRATA

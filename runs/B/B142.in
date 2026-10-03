@@ -4,7 +4,7 @@
 #==============================================================================
 
 # DESCRIPTION
-# Continuation of B131. 20kPa pressure on left hydrostat. 1 Million years. 10^-10 permeability, 950m aquifer.
+# Continuation of B141. 20kPa pressure on left hydrostat. 1 Million years. 10^-10 permeability, 950m aquifer.
 
 ## CHECKLIST
 # [X] change restart

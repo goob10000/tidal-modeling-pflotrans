@@ -28,7 +28,7 @@ def extract_time_from_line(line):
     
     return 0, 0
 
-f = open("B/B101/B101.out", "r")
+f = open("B/B20/B20.out", "r")
 l = f.readlines()
 
 # cat B06.out | grep change > t
@@ -56,4 +56,4 @@ df = pl.DataFrame({
     "dpmx": dpmx,
     "dtmpmx": dtmpmx})
 
-df.write_parquet("B/B101/out_data.parquet")
+df.write_parquet("B/B20/out_data.parquet")

@@ -4,14 +4,13 @@
 #==============================================================================
 
 # DESCRIPTION
-# Continuation of B142 with hyrostatic boundary of the same magnitude on the left and right
+# Continuation of B182 with hyrostatic boundary of the same magnitude on the left and right
 # 2 million years of observation
 
 ## CHECKLIST
 # [X] change restart
-# [X] change permeability
+# [X] change bottom_aquifer permeability
 # [X] change description
-# [X] change max time step
 
 # STATUS
 # Completed
@@ -29,8 +28,7 @@ SIMULATION
     FORMAT HDF5
   /
   RESTART
-    # FILENAME B142-restart.h5
-    FILENAME B143-3070000.0000y.h5
+    FILENAME B182-restart.h5
   /
 END
 
@@ -103,7 +101,7 @@ MATERIAL_PROPERTY seamount_cap
   THERMAL_CONDUCTIVITY_DRY 0.2d0 W/m-C
   THERMAL_CONDUCTIVITY_WET 0.2d0 W/m-C 
   PERMEABILITY
-    PERM_ISO 1.d-10
+    PERM_ISO 1.d-11
   /
   CHARACTERISTIC_CURVES cc1
 /
@@ -117,7 +115,7 @@ MATERIAL_PROPERTY aquifer
   THERMAL_CONDUCTIVITY_DRY 2.0d0 W/m-C
   THERMAL_CONDUCTIVITY_WET 2.0d0 W/m-C 
   PERMEABILITY
-    PERM_ISO 1.d-10
+    PERM_ISO 1.d-11
   /
   CHARACTERISTIC_CURVES cc1
 /
@@ -148,7 +146,7 @@ OUTPUT
     LIQUID_SATURATION
   /
   OBSERVATION_FILE
-    PERIODIC TIME 100. yr
+    PERIODIC TIME 1000. yr
     VARIABLES
       LIQUID_PRESSURE
       TEMPERATURE
@@ -161,7 +159,7 @@ END
 TIME
   FINAL_TIME 4.d6 yr
   INITIAL_TIMESTEP_SIZE 3.d0 yr
-  MAXIMUM_TIMESTEP_SIZE 3.d1 yr
+  MAXIMUM_TIMESTEP_SIZE 3.d2 yr
 END
 
 #=========================== regions ==========================================
@@ -557,7 +555,7 @@ END
 
 STRATA
   REGION bottom_aquifer
-  MATERIAL aquifer
+  MATERIAL heated_layer
 END
 
 STRATA

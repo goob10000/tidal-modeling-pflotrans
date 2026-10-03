@@ -4,18 +4,20 @@
 #==============================================================================
 
 # DESCRIPTION
-# Continuation of B142 with hyrostatic boundary of the same magnitude on the left and right
-# 2 million years of observation
+# Volume Test Sim
 
 ## CHECKLIST
-# [X] change restart
-# [X] change permeability
-# [X] change description
-# [X] change max time step
+# [X] change restart to nothing
+# [X] Change timesteps and ending time
+# [X] Change material properties to 1e-14
+# [X] Check stratigraphy
+# [X] Change boundary conditions
+# [X] Change logging
+# [X] Remove checkpointing
 
 # STATUS
-# Completed
-# Run
+# 
+# 
 
 SIMULATION
   SIMULATION_TYPE SUBSURFACE
@@ -23,14 +25,6 @@ SIMULATION
     SUBSURFACE_FLOW flow
       MODE TH
     /
-  /
-  CHECKPOINT
-    PERIODIC TIME 10000. y
-    FORMAT HDF5
-  /
-  RESTART
-    # FILENAME B142-restart.h5
-    FILENAME B143-3070000.0000y.h5
   /
 END
 
@@ -89,7 +83,7 @@ MATERIAL_PROPERTY heated_layer
   THERMAL_CONDUCTIVITY_DRY 2.0d0 W/m-C
   THERMAL_CONDUCTIVITY_WET 2.0d0 W/m-C 
   PERMEABILITY
-    PERM_ISO 1.d-17
+    PERM_ISO 1.d-14
   /
   CHARACTERISTIC_CURVES cc1
 /
@@ -103,13 +97,13 @@ MATERIAL_PROPERTY seamount_cap
   THERMAL_CONDUCTIVITY_DRY 0.2d0 W/m-C
   THERMAL_CONDUCTIVITY_WET 0.2d0 W/m-C 
   PERMEABILITY
-    PERM_ISO 1.d-10
+    PERM_ISO 1.d-14
   /
   CHARACTERISTIC_CURVES cc1
 /
 
 MATERIAL_PROPERTY aquifer
-  ID 3
+  ID 6
   POROSITY 0.10d0
   TORTUOSITY 1.d0
   ROCK_DENSITY 2700.d0 kg/m^3 
@@ -117,7 +111,7 @@ MATERIAL_PROPERTY aquifer
   THERMAL_CONDUCTIVITY_DRY 2.0d0 W/m-C
   THERMAL_CONDUCTIVITY_WET 2.0d0 W/m-C 
   PERMEABILITY
-    PERM_ISO 1.d-10
+    PERM_ISO 1.d-14
   /
   CHARACTERISTIC_CURVES cc1
 /
@@ -138,7 +132,7 @@ END
 
 #=========================== output options ===================================
 OUTPUT
-  PERIODIC TIME 10000. yr
+  PERIODIC TIME 5.d-6 yr
   FORMAT TECPLOT BLOCK
   VELOCITY_AT_CENTER
   VARIABLES
@@ -146,22 +140,15 @@ OUTPUT
     TEMPERATURE
     LIQUID_DENSITY
     LIQUID_SATURATION
-  /
-  OBSERVATION_FILE
-    PERIODIC TIME 100. yr
-    VARIABLES
-      LIQUID_PRESSURE
-      TEMPERATURE
-      LIQUID_DENSITY
-    /
+    VOLUME
   /
 END
 
 #=========================== times ============================================
 TIME
-  FINAL_TIME 4.d6 yr
-  INITIAL_TIMESTEP_SIZE 3.d0 yr
-  MAXIMUM_TIMESTEP_SIZE 3.d1 yr
+  FINAL_TIME 1.d-5 yr
+  INITIAL_TIMESTEP_SIZE 1.d-6 yr
+  MAXIMUM_TIMESTEP_SIZE 1.d-4 yr
 END
 
 #=========================== regions ==========================================
@@ -234,153 +221,6 @@ REGION left_insulating_cap
     5000.d0 1.d0 -1000.d0
   /
 END
-
-
-#=========================== logging points ==========================================
-
-REGION location_1
-  COORDINATE 5200.0 1.0 -950.0
-/
-
-REGION location_2
-  COORDINATE 6400.0 1.0 -950.0
-/
-
-REGION location_3
-  COORDINATE 7600.0 1.0 -950.0
-/
-
-REGION location_4
-  COORDINATE 8800.0 1.0 -950.0
-/
-
-REGION location_5
-  COORDINATE 10000.0 1.0 -950.0
-/
-
-REGION location_6
-  COORDINATE 11200.0 1.0 -950.0
-/
-
-REGION location_7
-  COORDINATE 12400.0 1.0 -950.0
-/
-
-REGION location_8
-  COORDINATE 13600.0 1.0 -950.0
-/
-
-REGION location_9
-  COORDINATE 14800.0 1.0 -950.0
-/
-
-REGION location_10
-  COORDINATE 5200.0 1.0 -500.0
-/
-
-REGION location_11
-  COORDINATE 6400.0 1.0 -500.0
-/
-
-REGION location_12
-  COORDINATE 7600.0 1.0 -500.0
-/
-
-REGION location_13
-  COORDINATE 8800.0 1.0 -500.0
-/
-
-REGION location_14
-  COORDINATE 10000.0 1.0 -500.0
-/
-
-REGION location_15
-  COORDINATE 11200.0 1.0 -500.0
-/
-
-REGION location_16
-  COORDINATE 12400.0 1.0 -500.0
-/
-
-REGION location_17
-  COORDINATE 13600.0 1.0 -500.0
-/
-
-REGION location_18
-  COORDINATE 14800.0 1.0 -500.0
-/
-
-OBSERVATION
-  REGION location_1
-/
-
-OBSERVATION
-  REGION location_2
-/
-
-OBSERVATION
-  REGION location_3
-/
-
-OBSERVATION
-  REGION location_4
-/
-
-OBSERVATION
-  REGION location_5
-/
-
-OBSERVATION
-  REGION location_6
-/
-
-OBSERVATION
-  REGION location_7
-/
-
-OBSERVATION
-  REGION location_8
-/
-
-OBSERVATION
-  REGION location_9
-/
-
-OBSERVATION
-  REGION location_10
-/
-
-OBSERVATION
-  REGION location_11
-/
-
-OBSERVATION
-  REGION location_12
-/
-
-OBSERVATION
-  REGION location_13
-/
-
-OBSERVATION
-  REGION location_14
-/
-
-OBSERVATION
-  REGION location_15
-/
-
-OBSERVATION
-  REGION location_16
-/
-
-OBSERVATION
-  REGION location_17
-/
-
-OBSERVATION
-  REGION location_18
-/
 
 #=========================== Boundaries ==========================================
 REGION top_cap
@@ -477,26 +317,6 @@ FLOW_CONDITION initial_crust
   TEMPERATURE 2.d0 C
 END
 
-FLOW_CONDITION hydrostatic_bc
-  TYPE
-    LIQUID_PRESSURE HYDROSTATIC
-    TEMPERATURE DIRICHLET
-  /
-  INTERPOLATION LINEAR
-  LIQUID_PRESSURE 2.d7 Pa
-  TEMPERATURE 2.d0 C
-END
-
-FLOW_CONDITION hydrostaticNpush_bc
-  TYPE
-    LIQUID_PRESSURE HYDROSTATIC
-    TEMPERATURE DIRICHLET
-  /
-  INTERPOLATION LINEAR
-  LIQUID_PRESSURE 202.d5 Pa
-  TEMPERATURE 2.d0 C
-END
-
 #=========================== condition couplers ===============================
 INITIAL_CONDITION
   FLOW_CONDITION initial_crust
@@ -514,15 +334,14 @@ BOUNDARY_CONDITION bottom_boundary_bc
 END
 
 BOUNDARY_CONDITION right_hydrostat_bc
-  FLOW_CONDITION hydrostatic_bc
+  FLOW_CONDITION no_fluid_2C
   REGION right_hydrostat
 END
 
 BOUNDARY_CONDITION left_hydrostat_bc
-  FLOW_CONDITION hydrostatic_bc
+  FLOW_CONDITION no_fluid_2C
   REGION left_hydrostat
 END
-
 
 BOUNDARY_CONDITION right_cap_2deg
   FLOW_CONDITION no_fluid_2C
@@ -537,17 +356,17 @@ END
 #=========================== stratigraphy couplers ============================
 STRATA
   REGION top_insulating_cap
-  MATERIAL seamount_cap
+  MATERIAL aquifer
 END
 
 STRATA
   REGION right_insulating_cap
-  MATERIAL seamount_cap
+  MATERIAL aquifer
 END
 
 STRATA
   REGION left_insulating_cap
-  MATERIAL seamount_cap
+  MATERIAL aquifer
 END
 
 STRATA

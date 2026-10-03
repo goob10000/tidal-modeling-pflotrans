@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import polars as pl
 
-path = "B/B101/out_data.parquet"
+path = "B/B20/out_data.parquet"
 df = pl.read_parquet(path)
 
 t = df["t"]
